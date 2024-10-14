@@ -1,16 +1,16 @@
-/snap/clion/296/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/snap/clion/296/bin/ninja/linux/x64/ninja -G Ninja -S /home/parsa/CLionProjects/B_learning_Game -B /home/parsa/CLionProjects/B_learning_Game/cmake-build-debug
--- The C compiler identification is GNU 11.4.0
--- The CXX compiler identification is GNU 11.4.0
+"C:\Users\Parsa\AppData\Local\JetBrains\CLion 2024.2.2\bin\cmake\win\x64\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug -G "MinGW Makefiles" -S C:\Users\Parsa\CLionProjects\B_learning_Game -B C:\Users\Parsa\CLionProjects\B_learning_Game\cmake-build-debug
+-- The C compiler identification is GNU 13.1.0
+-- The CXX compiler identification is GNU 13.1.0
 -- Detecting C compiler ABI info
 -- Detecting C compiler ABI info - done
--- Check for working C compiler: /usr/bin/cc - skipped
+-- Check for working C compiler: C:/Users/Parsa/AppData/Local/JetBrains/CLion 2024.2.2/bin/mingw/bin/gcc.exe - skipped
 -- Detecting C compile features
 -- Detecting C compile features - done
 -- Detecting CXX compiler ABI info
 -- Detecting CXX compiler ABI info - done
--- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Check for working CXX compiler: C:/Users/Parsa/AppData/Local/JetBrains/CLion 2024.2.2/bin/mingw/bin/g++.exe - skipped
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
--- Configuring done (0.3s)
+-- Configuring done (1.6s)
 -- Generating done (0.0s)
--- Build files have been written to: /home/parsa/CLionProjects/B_learning_Game/cmake-build-debug
+-- Build files have been written to: C:/Users/Parsa/CLionProjects/B_learning_Game/cmake-build-debug

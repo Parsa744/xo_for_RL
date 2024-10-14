@@ -29,18 +29,17 @@ public:
         }
     }
     int move(int a, int b, int c) {
-        if (a < 0 || a >= 3 || b < 0 || b >= 3 || (c != 1 && c != 2)) {
-            cout << "Not valid\n";
-            return -1;
-        }
-
-        if (board[a][b] != 0) {
-            //cout << "Not valid, cell already taken\n";
-            return -1;
-        }
-
         board[a][b] = c;
         return 1;
+    }
+    int check_the_move(int a, int b, int c) {
+        if(a < 0 || a >= 3 || b < 0 || b >= 3 || (c != 1 && c != 2)){
+            return -1;
+        }
+        if (board[a][b] != 0) {
+            return -1;
+        }
+        return 0;
     }
     int check_winner() {
         // Check rows for winner
@@ -83,24 +82,28 @@ public:
         do {
             a = rand() % 3;  // Random row index
             b = rand() % 3;  // Random column index
-        } while (env.move(a, b, player) == -1);
+        } while (env.check_the_move(a, b, player) == -1);
+        env.move(a, b, player);
 
     }
 };
 
+
+
 int main(){
     xo_env xo_bord;
-    agent computer = 1;
-    agent you = 2;
+    agent computer = 2;
+    agent you=1;
     int won = 0;
     int turn = 0;
     while(won == 0){
-        xo_bord.print_bord();
         cout << '\n';
         computer.make_move(xo_bord);
         you.make_move(xo_bord);
         won = xo_bord.check_winner();
         turn++;
+        xo_bord.print_bord();
+
     }
     if (won == 1) {
         cout << "Player 1 (X) wins!\n";
