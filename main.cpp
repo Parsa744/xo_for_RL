@@ -1,4 +1,11 @@
 #include <iostream>
+#include <ctime>    // For time()
+#include <cstdlib>  // For rand() and srand()
+#include <SDL2/SDL.h>
+
+const int WINDOW_WIDTH = 600;
+const int WINDOW_HEIGHT = 600;
+const int CELL_SIZE = WINDOW_WIDTH / 3;
 
 using namespace std;
 
@@ -13,6 +20,9 @@ public:
                 board[i][j] = 0;
             }
         }
+    }
+    int getElement(int a,int b){
+        return board[a][b];
     }
     void print_bord(){
         for (int i = 0; i < 3; i++) {
@@ -77,6 +87,7 @@ public:
         player = player_number;
     }
     void make_move(xo_env& env){
+        srand(static_cast<unsigned int>(time(0)));
         int a;
         int b;
         do {
@@ -84,25 +95,159 @@ public:
             b = rand() % 3;  // Random column index
         } while (env.check_the_move(a, b, player) == -1);
         env.move(a, b, player);
-
+    }
+    int getID() const{
+        return player;
     }
 };
+void renderBoard(SDL_Renderer* renderer, xo_env& env) {
+    // Set background to white
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    SDL_RenderClear(renderer);
 
+    // Draw grid lines
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    for (int i = 1; i < 3; i++) {
+        SDL_RenderDrawLine(renderer, i * CELL_SIZE, 0, i * CELL_SIZE, WINDOW_HEIGHT);
+        SDL_RenderDrawLine(renderer, 0, i * CELL_SIZE, WINDOW_WIDTH, i * CELL_SIZE);
+    }
 
+    // Draw X's and O's
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            int cell = env.getElement(i, j);
+            if (cell == 1) {
+                // Draw X
+                SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+                SDL_RenderDrawLine(renderer, j * CELL_SIZE, i * CELL_SIZE, (j + 1) * CELL_SIZE, (i + 1) * CELL_SIZE);
+                SDL_RenderDrawLine(renderer, (j + 1) * CELL_SIZE, i * CELL_SIZE, j * CELL_SIZE, (i + 1) * CELL_SIZE);
+            } else if (cell == 2) {
+                // Draw O
+                SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+                SDL_Rect rect = { j * CELL_SIZE + CELL_SIZE / 4, i * CELL_SIZE + CELL_SIZE / 4, CELL_SIZE / 2, CELL_SIZE / 2 };
+                SDL_RenderDrawRect(renderer, &rect);
+            }
+        }
+    }
+    SDL_RenderPresent(renderer);
+}
+class smart_agent : public agent {
+private:
+    int reward;
+    int punish;
+    xo_env rl_bord;
+    int training_loop;
+
+public:
+    smart_agent(int player, int reward, int punish,xo_env rl_env,int training_ep)
+            : agent(player), reward(reward), punish(punish),rl_bord(rl_env),training_loop(training_ep) {}
+    void setReward(int r) {
+        reward = r;
+    }
+
+    int getReward() const {
+        return reward;
+    }
+    void setPunish(int p) {
+        punish = p;
+    }
+    int getPunish() const {
+        return punish;
+    }
+    void setTrainingLop(int trinaing_ep){
+        training_loop = trinaing_ep;
+    }
+    int getTraningLoop() const{
+        return training_loop;
+    }
+    void setRl_bord(xo_env bord){
+        rl_bord = bord;
+    }
+    xo_env getRl_bord() const{
+        return rl_bord;
+    }
+    int smart_move(xo_env& env){
+        for(int i;i<3;i++){
+            for(int j;j<3;j++){
+                if(env.check_the_move(i,j, getID())){
+                    xo_env env_copy = env;
+                    env_copy.move(i,j,getID());
+                    if(env_copy.check_winner()==getID()) {
+                        int prives_reward = rl_bord.getElement(i, j);
+                        prives_reward += reward;
+                        rl_bord.move(i, j, prives_reward);
+                    }
+                    else if(env_copy.check_winner()==0){
+                    } else{
+                        int prives_reward = rl_bord.getElement(i, j);
+                        prives_reward += punish;
+                        rl_bord.move(i, j, prives_reward);
+                    }
+
+                }
+            }
+        }
+        for(int i;i<3;i++){
+            for(int j;j<3;j++){
+            if(env.check_the_move(i,j, getID())&& rl_bord.getElement(i,j) > 0){
+                    env.move(i,j,getID());
+                    return 0;
+                }
+            }
+        }
+        make_move(env);
+        return 0;
+
+    }
+
+};
 
 int main(){
     xo_env xo_bord;
-    agent computer = 2;
-    agent you=1;
+    xo_env rl;
+    smart_agent computer(1,1,-1,rl,2); // x
+    agent you = 2;
     int won = 0;
     int turn = 0;
+    // Initialize SDL for UI
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
+        return 1;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("Tic Tac Toe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    if (window == NULL) {
+        cout << "Window could not be created! SDL_Error: " << SDL_GetError() << endl;
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (renderer == NULL) {
+        cout << "Renderer could not be created! SDL_Error: " << SDL_GetError() << endl;
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return 1;
+    }
     while(won == 0){
+
         cout << '\n';
-        computer.make_move(xo_bord);
+        computer.smart_move(xo_bord);
+        turn++;
+        //xo_bord.print_bord();
+        renderBoard(renderer, xo_bord);
+        SDL_Delay(900);
+        if(turn==9){
+            won = xo_bord.check_winner();
+            break;
+        }
+        cout << '\n';
+
         you.make_move(xo_bord);
         won = xo_bord.check_winner();
         turn++;
-        xo_bord.print_bord();
+        //xo_bord.print_bord();
+        renderBoard(renderer, xo_bord);
 
     }
     if (won == 1) {
