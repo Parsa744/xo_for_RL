@@ -2,6 +2,10 @@
 #include <ctime>    // For time()
 #include <cstdlib>  // For rand() and srand()
 #include <SDL2/SDL.h>
+#include <vector>
+#include <numeric>  // For std::accumulate
+#include <fstream>
+#include <string>
 
 const int WINDOW_WIDTH = 600;
 const int WINDOW_HEIGHT = 600;
@@ -9,7 +13,40 @@ const int CELL_SIZE = WINDOW_WIDTH / 3;
 
 using namespace std;
 
+void save_multiple_vectors_to_file(const std::vector<std::vector<int>>& vectors, const std::string& filename) {
+    std::ofstream outfile(filename);
 
+    if (!outfile) {
+        std::cerr << "Error opening file: " << filename << std::endl;
+        return;
+    }
+
+    // Write each vector to the file
+    for (size_t i = 0; i < vectors.size(); ++i) {
+        outfile << "Vector " << (i + 1) << ":\n"; // Write vector label
+        for (const auto& element : vectors[i]) {
+            outfile << element << " "; // Write each element followed by a space
+        }
+        outfile << "\n"; // New line to separate different vectors
+    }
+
+    outfile.close();
+    if (outfile.good()) {
+        std::cout << "Vectors successfully saved to " << filename << std::endl;
+    } else {
+        std::cerr << "Error occurred while saving to file." << std::endl;
+    }
+}
+
+double calculate_average(const std::vector<int>& vec) {
+    if (vec.empty()) {
+        return 0.0;  // Return 0 if the vector is empty to avoid division by zero.
+    }
+
+    double sum = std::accumulate(vec.begin(), vec.end(), 0.0);
+    double average = sum / vec.size();
+    return average;
+}
 
 class xo_env {
 private:
@@ -214,11 +251,11 @@ public:
 
 };
 
-int main(){
+int for_x_game(){
     int x_win = 0;
     int o_win = 0;
     int drow = 0;
-    int games = 10;
+    int games = 100000;
     srand(static_cast<unsigned int>(time(0)));
 
     for(int i =0;i<games;i++){
@@ -272,15 +309,77 @@ int main(){
 
         }
         if (won == 1) {
-            cout << "Player 1 (X) wins!\n";
+            //cout << "Player 1 (X) wins!\n";
             x_win ++;
         } else if (won == 2) {
-            cout << "Player 2 (O) wins!\n";
+            //cout << "Player 2 (O) wins!\n";
             o_win ++;
         } else {
-            cout << "It's a draw!\n";
+            // cout << "It's a draw!\n";
             drow++;
         }
     }
     cout << "x won:" << x_win << "o won:" << o_win << "Dorw :"<< drow;
+}
+
+int main(){
+    std::vector<int> x_win_list;
+    std::vector<int> o_win_list;
+    std::vector<int> drow_list;
+    int games = 250;
+    srand(static_cast<unsigned int>(time(0)));
+    for(int j = 0;j<games;j++) {
+        int x_win = 0;
+        int o_win = 0;
+        int drow = 0;
+        for (int i = 0; i < j; i++) {
+            xo_env xo_bord;
+            xo_env rl;
+            smart_agent computer(1, 1, -1, rl, 2); // x
+            agent you = 2;
+            int won = 0;
+            int turn = 0;
+
+            while (won == 0) {
+
+                //cout << '\n';
+                computer.smart_move(xo_bord);
+                turn++;
+                //xo_bord.print_bord();
+                //renderBoard(renderer, xo_bord);
+                //SDL_Delay(1500);
+                if (turn == 9) {
+                    won = xo_bord.check_winner();
+                    break;
+                }
+                //cout << '\n';
+
+                you.make_move(xo_bord);
+                won = xo_bord.check_winner();
+                turn++;
+                //xo_bord.print_bord();
+                //renderBoard(renderer, xo_bord);
+
+            }
+            if (won == 1) {
+                //cout << "Player 1 (X) wins!\n";
+                x_win++;
+            } else if (won == 2) {
+                //cout << "Player 2 (O) wins!\n";
+                o_win++;
+            } else {
+                // cout << "It's a draw!\n";
+                drow++;
+            }
+
+        }
+        x_win_list.push_back(x_win);
+        o_win_list.push_back(o_win);
+        drow_list.push_back(drow);
+    }
+    std::vector<std::vector<int>> all_vectors = {x_win_list, o_win_list, drow_list};
+    cout << "x won:" << calculate_average(x_win_list) << "o won:" << calculate_average(o_win_list)  << "Dorw :"<< calculate_average(drow_list) << "\n";
+
+    // Save all vectors to a file named "vectors_data.txt"
+    save_multiple_vectors_to_file(all_vectors, "vectors_data_10.txt");
 }
