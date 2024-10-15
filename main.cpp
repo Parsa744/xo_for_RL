@@ -9,6 +9,8 @@ const int CELL_SIZE = WINDOW_WIDTH / 3;
 
 using namespace std;
 
+
+
 class xo_env {
 private:
     int board[3][3];  // 2D array for the 3x3 board
@@ -87,7 +89,6 @@ public:
         player = player_number;
     }
     void make_move(xo_env& env){
-        srand(static_cast<unsigned int>(time(0)));
         int a;
         int b;
         do {
@@ -167,34 +168,45 @@ public:
         return rl_bord;
     }
     int smart_move(xo_env& env){
-        for(int i;i<3;i++){
-            for(int j;j<3;j++){
-                if(env.check_the_move(i,j, getID())){
+        for(int i=0;i<3;i++){
+            for(int j=0;j<3;j++){
+                if(env.check_the_move(i,j, getID())==0){
                     xo_env env_copy = env;
                     env_copy.move(i,j,getID());
                     if(env_copy.check_winner()==getID()) {
                         int prives_reward = rl_bord.getElement(i, j);
-                        prives_reward += reward;
-                        rl_bord.move(i, j, prives_reward);
+                        env.move(i,j,getID());
+                        //rl_bord.print_bord();
+                        return 0;
+                        //cout << "I found a smart move"<< '\n';
+                        //prives_reward += reward;
+                        //rl_bord.move(i, j, prives_reward);
                     }
                     else if(env_copy.check_winner()==0){
                     } else{
-                        int prives_reward = rl_bord.getElement(i, j);
-                        prives_reward += punish;
-                        rl_bord.move(i, j, prives_reward);
+                        env.move(i,j,getID());
+                        //rl_bord.print_bord();
+                        return 0;
+                        //int prives_reward = rl_bord.getElement(i, j);
+                        //cout << "I found a stupid move"<< '\n';
+                        //prives_reward += punish;
+                        //rl_bord.move(i, j, prives_reward);
                     }
 
                 }
             }
         }
-        for(int i;i<3;i++){
-            for(int j;j<3;j++){
+        for(int i=0;i<3;i++){
+            for(int j=0;j<3;j++){
             if(env.check_the_move(i,j, getID())&& rl_bord.getElement(i,j) > 0){
+                    //cout << "I made a smart move"<< '\n';
                     env.move(i,j,getID());
+                    //rl_bord.print_bord();
                     return 0;
                 }
             }
         }
+        //rl_bord.print_bord();
         make_move(env);
         return 0;
 
@@ -203,58 +215,72 @@ public:
 };
 
 int main(){
-    xo_env xo_bord;
-    xo_env rl;
-    smart_agent computer(1,1,-1,rl,2); // x
-    agent you = 2;
-    int won = 0;
-    int turn = 0;
-    // Initialize SDL for UI
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
-        return 1;
-    }
+    int x_win = 0;
+    int o_win = 0;
+    int drow = 0;
+    int games = 10;
+    srand(static_cast<unsigned int>(time(0)));
 
-    SDL_Window* window = SDL_CreateWindow("Tic Tac Toe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
-    if (window == NULL) {
-        cout << "Window could not be created! SDL_Error: " << SDL_GetError() << endl;
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (renderer == NULL) {
-        cout << "Renderer could not be created! SDL_Error: " << SDL_GetError() << endl;
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-        return 1;
-    }
-    while(won == 0){
-
-        cout << '\n';
-        computer.smart_move(xo_bord);
-        turn++;
-        //xo_bord.print_bord();
-        renderBoard(renderer, xo_bord);
-        SDL_Delay(900);
-        if(turn==9){
-            won = xo_bord.check_winner();
-            break;
+    for(int i =0;i<games;i++){
+        xo_env xo_bord;
+        xo_env rl;
+        smart_agent computer(1,1,-1,rl,2); // x
+        agent you = 2;
+        int won = 0;
+        int turn = 0;
+        // Initialize SDL for UI
+        /*
+        if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+            cout << "SDL could not initialize! SDL_Error: " << SDL_GetError() << endl;
+            return 1;
         }
-        cout << '\n';
 
-        you.make_move(xo_bord);
-        won = xo_bord.check_winner();
-        turn++;
-        //xo_bord.print_bord();
-        renderBoard(renderer, xo_bord);
+        SDL_Window* window = SDL_CreateWindow("Tic Tac Toe", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+        if (window == NULL) {
+            cout << "Window could not be created! SDL_Error: " << SDL_GetError() << endl;
+            SDL_Quit();
+            return 1;
+        }
 
+        SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+        if (renderer == NULL) {
+            cout << "Renderer could not be created! SDL_Error: " << SDL_GetError() << endl;
+            SDL_DestroyWindow(window);
+            SDL_Quit();
+            return 1;
+        }
+        */
+        while(won == 0){
+
+            //cout << '\n';
+            computer.smart_move(xo_bord);
+            turn++;
+            //xo_bord.print_bord();
+            //renderBoard(renderer, xo_bord);
+            //SDL_Delay(1500);
+            if(turn==9){
+                won = xo_bord.check_winner();
+                break;
+            }
+            //cout << '\n';
+
+            you.make_move(xo_bord);
+            won = xo_bord.check_winner();
+            turn++;
+            //xo_bord.print_bord();
+            //renderBoard(renderer, xo_bord);
+
+        }
+        if (won == 1) {
+            cout << "Player 1 (X) wins!\n";
+            x_win ++;
+        } else if (won == 2) {
+            cout << "Player 2 (O) wins!\n";
+            o_win ++;
+        } else {
+            cout << "It's a draw!\n";
+            drow++;
+        }
     }
-    if (won == 1) {
-        cout << "Player 1 (X) wins!\n";
-    } else if (won == 2) {
-        cout << "Player 2 (O) wins!\n";
-    } else {
-        cout << "It's a draw!\n";
-    }
+    cout << "x won:" << x_win << "o won:" << o_win << "Dorw :"<< drow;
 }
